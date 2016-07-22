@@ -11,7 +11,7 @@ import createLinkifyPlugin from 'draft-js-linkify-plugin';
 import createBlockBreakoutPlugin from 'draft-js-block-breakout-plugin';
 import createRichButtonsPlugin from 'draft-js-richbuttons-plugin';
 import createCounterPlugin from 'draft-js-counter-plugin';
-import createEntityPropsPlugin from 'draft-js-entity-props-plugin';
+import createAutoListPlugin from 'draft-js-autolist-plugin';
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Initialize the plugins
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,19 +19,20 @@ const linkifyPlugin = createLinkifyPlugin();
 const blockBreakoutPlugin = createBlockBreakoutPlugin();
 const richButtonsPlugin = createRichButtonsPlugin();
 const counterPlugin = createCounterPlugin();
-const entityPlugin = createEntityPropsPlugin();
+const autoListPlugin = createAutoListPlugin();
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Pull out neccesary Props
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-const { EditorState, ContentState } = Draft;
+const { EditorState, ContentState, RichUtils} = Draft;
 const { ItalicButton, BoldButton, MonospaceButton, UnderlineButton,
   StrikethroughButton, ParagraphButton, BlockquoteButton, CodeButton,
-  OLButton, ULButton, H1Button, H2Button, H3Button, H4Button, H5Button, H6Button } = richButtonsPlugin;
+  OLButton, ULButton, H1Button, H2Button, H3Button, H4Button, H5Button,
+  H6Button, AlignLeftButton, AlignCenterButton, AlignRightButton} = richButtonsPlugin;
 const { CharCounter, WordCounter, LineCounter } = counterPlugin;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Build some custom constants
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-const plugins = [linkifyPlugin, blockBreakoutPlugin, richButtonsPlugin, counterPlugin, entityPlugin];
+const plugins = [linkifyPlugin, blockBreakoutPlugin, richButtonsPlugin, counterPlugin, autoListPlugin];
 const limits = {chars: 200, words: 30, lines: 10};
 const text = `This editor has counters below!
 Try typing here and watch the numbers go up.
@@ -56,7 +57,7 @@ const MyInlineButton = ({ toggleInlineStyle, isActive, label, inlineStyle}) =>
     {label}
   </Button>;
 const MyInlineMenuItem = ({ toggleInlineStyle, isActive, label, inlineStyle, onSelect }) =>
-  <MenuItem bsClass="small" onClick={toggleInlineStyle} onSelect={onSelect} active={isActive ? true : false} >
+  <MenuItem bsClass="small" onClick={toggleInlineStyle} onSelect={onSelect} active={isActive ? true : false} eventKey={label}>
     {label}
   </MenuItem>;
 
@@ -81,19 +82,55 @@ const MyBlockMenuItem = ({toggleBlockType, isActive, label, blockType, onSelect}
   </MenuItem>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// StyleMap
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+const styleMap = {
+    FONT_SIZE_8: { fontSize: 8 },
+    FONT_SIZE_10: { fontSize: 10 },
+    FONT_SIZE_12: { fontSize: 12 },
+    FONT_SIZE_14: { fontSize: 14 },
+    FONT_SIZE_18: { fontSize: 18 },
+    FONT_SIZE_24: { fontSize: 24 },
+    FONT_SIZE_36: { fontSize: 36 },
+    FONT_SIZE_48: { fontSize: 48 },
+    FONT_OPERATOR: { fontFamily: 'Operator' },
+    FONT_ARIAL: { fontFamily: 'Arial' },
+    FONT_COMICSANS: { fontFamily: 'Comic Sans MS' },
+
+};
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Build the custom editor class
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 export default class CustomEditor extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      editorState: createEditorStateWithText(text)};
+    this.state = {editorState: createEditorStateWithText(text)};
     this.onChange = (editorState) => this.setState({ editorState });
     this.focus = () => this.refs.editor.focus();
   }
-  //  _onAlignLeftClick() {
   //   //className is public-DraftEditor-content to change text alignment
-  // }
+  _onSizeSelect(eventKey) {
+    const {editorState} = this.state
+    const string = 'FONT_SIZE_' + eventKey
+     this.onChange(RichUtils.toggleInlineStyle(
+     editorState,
+      string
+   ));
+ }
+ _onFontSelect(eventKey) {
+   const {editorState} = this.state
+   const string = 'FONT_' + eventKey
+    this.onChange(RichUtils.toggleInlineStyle(
+    editorState,
+     string
+  ));
+}
+  _onAlignCenterClick() {
+    const {editorState} = this.state
+    this.onChange(RichUtils.toggleInlineStyle(
+    editorState,'text-align: center'));
+ }
+
   render() {
     const size = <Glyphicon glyph="text-size" />
     const header = <Glyphicon glyph="header" />
@@ -109,25 +146,28 @@ export default class CustomEditor extends Component {
               <ItalicButton><MyInlineIconButton glyph="italic"/></ItalicButton>
               <UnderlineButton><MyInlinePicButton src="underline.png"/></UnderlineButton>
               <StrikethroughButton><MyInlinePicButton src="text-strike.png"/></StrikethroughButton>
-              {/*<AlignLeftButton><MyInlineIconButton glyph="align-left"/></AlignLeftButton>
-                <AlignCenterButton><MyInlineIconButton glyph="align-center"/></AlignCenterButton>
-              <AlignRightButton><MyInlineIconButton glyph="align-right"/></AlignRightButton>*/}
+              {/*<Button bsSize="small" onClick={this._onAlignLeftClick.bind(this)}><Glyphicon glyph="align-left"/></Button>
+              <Button bsSize="small" onClick={this._onAlignCenterClick.bind(this)}><Glyphicon glyph="align-center"/></Button>*/}
+              <AlignLeftButton><MyBlockIconButton glyph="align-left"/></AlignLeftButton>
+              <AlignCenterButton><MyBlockIconButton glyph="align-center"/></AlignCenterButton>
+              <AlignRightButton><MyBlockIconButton glyph="align-right"/></AlignRightButton>
               <ULButton><MyBlockIconButton glyph="list"/></ULButton>
               <OLButton><MyBlockPicButton src="ordered-list.png"/></OLButton>
               <DropdownButton bsSize="small" title={font}>
-                <MenuItem eventKey="1">Times New Roman</MenuItem>
-                <MenuItem eventKey="2">Arial</MenuItem>
+                <MenuItem eventKey={'ARIAL'} onSelect={this._onFontSelect.bind(this)}>Arial</MenuItem>
+                <MenuItem eventKey={'COMICSANS'} onSelect={this._onFontSelect.bind(this)}>Comic Sans MS</MenuItem>
+                <MenuItem eventKey={'OPERATOR'} onSelect={this._onFontSelect.bind(this)}>Operator</MenuItem>
                 <MonospaceButton><MyInlineMenuItem/></MonospaceButton>
               </DropdownButton>
               <DropdownButton bsSize="small" title={size}>
-                <MenuItem eventKey="8">8pt</MenuItem>
-                <MenuItem eventKey="10">10pt</MenuItem>
-                <MenuItem eventKey="12">12pt</MenuItem>
-                <MenuItem eventKey="14">14pt</MenuItem>
-                <MenuItem eventKey="18">18pt</MenuItem>
-                <MenuItem eventKey="24">24pt</MenuItem>
-                <MenuItem eventKey="36">36pt</MenuItem>
-                <MenuItem eventKey="48">48pt</MenuItem>
+                <MenuItem eventKey={8} onSelect={this._onSizeSelect.bind(this)}>8pt</MenuItem>
+                <MenuItem eventKey={10} onSelect={this._onSizeSelect.bind(this)}>10pt</MenuItem>
+                <MenuItem eventKey={12} onSelect={this._onSizeSelect.bind(this)}>12pt</MenuItem>
+                <MenuItem eventKey={14} onSelect={this._onSizeSelect.bind(this)}>14pt</MenuItem>
+                <MenuItem eventKey={18} onSelect={this._onSizeSelect.bind(this)}>18pt</MenuItem>
+                <MenuItem eventKey={24} onSelect={this._onSizeSelect.bind(this)}>24pt</MenuItem>
+                <MenuItem eventKey={36} onSelect={this._onSizeSelect.bind(this)}>36pt</MenuItem>
+                <MenuItem eventKey={48} onSelect={this._onSizeSelect.bind(this)}>48pt</MenuItem>
               </DropdownButton>
               <DropdownButton bsSize="small" title={header}>
                 <ParagraphButton><MyBlockMenuItem/></ParagraphButton>
@@ -145,6 +185,7 @@ export default class CustomEditor extends Component {
         </div>
         <div className="editor" onClick={ this.focus }>
           <Editor
+            customStyleMap={styleMap}
             editorState={this.state.editorState}
             onChange={this.onChange}
             spellCheck={true}
