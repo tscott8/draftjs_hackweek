@@ -12,6 +12,7 @@ import createBlockBreakoutPlugin from 'draft-js-block-breakout-plugin';
 import createRichButtonsPlugin from 'draft-js-richbuttons-plugin';
 import createCounterPlugin from 'draft-js-counter-plugin';
 import createAutoListPlugin from 'draft-js-autolist-plugin';
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Initialize the plugins
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -24,15 +25,16 @@ const autoListPlugin = createAutoListPlugin();
 // Pull out neccesary Props
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const { EditorState, ContentState, RichUtils} = Draft;
-const { ItalicButton, BoldButton, MonospaceButton, UnderlineButton,
-  StrikethroughButton, ParagraphButton, BlockquoteButton, CodeButton,
-  OLButton, ULButton, H1Button, H2Button, H3Button, H4Button, H5Button,
-  H6Button, AlignLeftButton, AlignCenterButton, AlignRightButton} = richButtonsPlugin;
+const { ItalicButton, BoldButton, MonospaceButton,
+  UnderlineButton, ParagraphButton, BlockquoteButton,
+  CodeButton, OLButton, ULButton, H1Button, H2Button,
+  H3Button, H4Button, H5Button, H6Button, } = richButtonsPlugin;
 const { CharCounter, WordCounter, LineCounter } = counterPlugin;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Build some custom constants
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-const plugins = [linkifyPlugin, blockBreakoutPlugin, richButtonsPlugin, counterPlugin, autoListPlugin];
+const plugins = [linkifyPlugin, blockBreakoutPlugin,richButtonsPlugin,
+  counterPlugin, autoListPlugin];
 const limits = {chars: 200, words: 30, lines: 10};
 const text = `This editor has counters below!
 Try typing here and watch the numbers go up.
@@ -56,14 +58,13 @@ const MyInlineButton = ({ toggleInlineStyle, isActive, label, inlineStyle}) =>
   <Button bsSize="small" onClick={toggleInlineStyle} bsStyle={isActive ? 'primary' : 'default'} >
     {label}
   </Button>;
-const MyInlineMenuItem = ({ toggleInlineStyle, isActive, label, inlineStyle, onSelect }) =>
-  <MenuItem bsClass="small" onClick={toggleInlineStyle} onSelect={onSelect} active={isActive ? true : false} eventKey={label}>
+const MyInlineMenuItem = ({ toggleInlineStyle, isActive, label, inlineStyle, onSelect, eventKey}) =>
+  <MenuItem bsClass="small" onClick={toggleInlineStyle} onSelect={onSelect} active={isActive ? true : false} eventKey={eventKey}>
     {label}
   </MenuItem>;
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Custom block style buttons
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const MyBlockPicButton = ({src, toggleBlockType, isActive, label, blockType}) =>
 <Button bsSize="small" onClick={toggleBlockType} bsStyle={isActive ? 'primary' : 'default'} >
   <img height='15px' src={src} className={isActive ? 'activeImg' : 'inactiveImg'}/>
@@ -76,14 +77,20 @@ const MyBlockButton = ({toggleBlockType, isActive, label, blockType}) =>
   <Button bsSize="small" onClick={toggleBlockType} bsStyle={isActive ? 'primary' : 'default'} >
     {label}
   </Button>;
-const MyBlockMenuItem = ({toggleBlockType, isActive, label, blockType, onSelect}) =>
-  <MenuItem bsClass="small" onClick={toggleBlockType} onSelect={onSelect} active={isActive ? true : false} >
+const MyBlockMenuItem = ({toggleBlockType, isActive, label, blockType, onSelect, eventKey}) =>
+  <MenuItem bsClass="small" onClick={toggleBlockType} onSelect={onSelect} active={isActive ? true : false} eventKey={eventKey}>
     {label}
   </MenuItem>
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // StyleMap
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// const styles = {
+//   left: {textAlign:'left'},
+//   center: {textAlign:'center'},
+//   right: {textAlign:'right'},
+//   just: {textAlign:'justify'}
+// }
 const styleMap = {
     FONT_SIZE_8: { fontSize: 8 },
     FONT_SIZE_10: { fontSize: 10 },
@@ -95,9 +102,29 @@ const styleMap = {
     FONT_SIZE_48: { fontSize: 48 },
     FONT_OPERATOR: { fontFamily: 'Operator' },
     FONT_ARIAL: { fontFamily: 'Arial' },
-    FONT_COMICSANS: { fontFamily: 'Comic Sans MS' },
-
-};
+    FONT_COMICSANS: { fontFamily: 'Comic Sans MS' }
+  };
+// function getBlockStyle(block) {
+//   switch (block.getType()) {
+//     case 'alignjustify':
+//         return [styles.justify];
+//     case 'alignleft':
+//         return [styles.left];
+//     case 'aligncenter':
+//         console.log({textAlign:"center"})
+//         return [styles.center] ;
+//     case 'alignright':
+//         return [styles.right];
+//     default:
+//         return null;
+//   }
+// }
+// const BLOCK_TYPES = [
+//     { label: 'AlignLeft', style: 'alignleft' },
+//     { label: 'AlignCenter', style: 'aligncenter' },
+//     { label: 'AlignRight', style: 'alignright' },
+//     { label: 'AlignJustify', style: 'alignjustify' },
+// ];
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Build the custom editor class
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -117,18 +144,18 @@ export default class CustomEditor extends Component {
       string
    ));
  }
- _onFontSelect(eventKey) {
-   const {editorState} = this.state
-   const string = 'FONT_' + eventKey
-    this.onChange(RichUtils.toggleInlineStyle(
-    editorState,
-     string
-  ));
-}
-  _onAlignCenterClick() {
+   _onFontSelect(eventKey) {
+     const {editorState} = this.state
+     const string = 'FONT_' + eventKey
+      this.onChange(RichUtils.toggleInlineStyle(
+      editorState,
+       string
+    ));
+  }
+  _onAlignmentClick(blockType) {
     const {editorState} = this.state
-    this.onChange(RichUtils.toggleInlineStyle(
-    editorState,'text-align: center'));
+    this.onChange(RichUtils.toggleBlockType(
+    editorState, blockType));
  }
 
   render() {
@@ -145,40 +172,38 @@ export default class CustomEditor extends Component {
               <BoldButton><MyInlineIconButton glyph="bold"/></BoldButton>
               <ItalicButton><MyInlineIconButton glyph="italic"/></ItalicButton>
               <UnderlineButton><MyInlinePicButton src="underline.png"/></UnderlineButton>
-              <StrikethroughButton><MyInlinePicButton src="text-strike.png"/></StrikethroughButton>
-              {/*<Button bsSize="small" onClick={this._onAlignLeftClick.bind(this)}><Glyphicon glyph="align-left"/></Button>
-              <Button bsSize="small" onClick={this._onAlignCenterClick.bind(this)}><Glyphicon glyph="align-center"/></Button>*/}
-              <AlignLeftButton><MyBlockIconButton glyph="align-left"/></AlignLeftButton>
-              <AlignCenterButton><MyBlockIconButton glyph="align-center"/></AlignCenterButton>
-              <AlignRightButton><MyBlockIconButton glyph="align-right"/></AlignRightButton>
+              <MyBlockIconButton onClick={console.log('LEFT!')} glyph="align-left"/>
+              <MyBlockIconButton onClick={console.log('RIGHT!')} glyph="align-center"/>
+              <MyBlockIconButton onClick={console.log('CENTER!')}glyph="align-right"/>
+              <MyBlockIconButton onClick={console.log('JUSTIFY!')} glyph="align-justify"/>
               <ULButton><MyBlockIconButton glyph="list"/></ULButton>
               <OLButton><MyBlockPicButton src="ordered-list.png"/></OLButton>
               <DropdownButton bsSize="small" title={font}>
-                <MenuItem eventKey={'ARIAL'} onSelect={this._onFontSelect.bind(this)}>Arial</MenuItem>
-                <MenuItem eventKey={'COMICSANS'} onSelect={this._onFontSelect.bind(this)}>Comic Sans MS</MenuItem>
-                <MenuItem eventKey={'OPERATOR'} onSelect={this._onFontSelect.bind(this)}>Operator</MenuItem>
-                <MonospaceButton><MyInlineMenuItem/></MonospaceButton>
+                <MyInlineMenuItem label={'Arial'} eventKey={'ARIAL'} onSelect={this._onFontSelect.bind(this)}/>
+                <MyInlineMenuItem label={'Comic Sans MS'} eventKey={'COMICSANS'} onSelect={this._onFontSelect.bind(this)}/>
+                <MyInlineMenuItem label={'Operator'} eventKey={'OPERATOR'} onSelect={this._onFontSelect.bind(this)}/>
+                <MonospaceButton><MyInlineMenuItem eventKey={'MONOSPACE'}/></MonospaceButton>
               </DropdownButton>
               <DropdownButton bsSize="small" title={size}>
-                <MenuItem eventKey={8} onSelect={this._onSizeSelect.bind(this)}>8pt</MenuItem>
-                <MenuItem eventKey={10} onSelect={this._onSizeSelect.bind(this)}>10pt</MenuItem>
-                <MenuItem eventKey={12} onSelect={this._onSizeSelect.bind(this)}>12pt</MenuItem>
-                <MenuItem eventKey={14} onSelect={this._onSizeSelect.bind(this)}>14pt</MenuItem>
-                <MenuItem eventKey={18} onSelect={this._onSizeSelect.bind(this)}>18pt</MenuItem>
-                <MenuItem eventKey={24} onSelect={this._onSizeSelect.bind(this)}>24pt</MenuItem>
-                <MenuItem eventKey={36} onSelect={this._onSizeSelect.bind(this)}>36pt</MenuItem>
-                <MenuItem eventKey={48} onSelect={this._onSizeSelect.bind(this)}>48pt</MenuItem>
+                <MyInlineMenuItem label={'8pt'} eventKey={8} onSelect={this._onSizeSelect.bind(this)}/>
+                <MyInlineMenuItem label={'10pt'} eventKey={10} onSelect={this._onSizeSelect.bind(this)}/>
+                <MyInlineMenuItem label={'12pt'} eventKey={12} onSelect={this._onSizeSelect.bind(this)}/>
+                <MyInlineMenuItem label={'14pt'} eventKey={14} onSelect={this._onSizeSelect.bind(this)}/>
+                <MyInlineMenuItem label={'18pt'} eventKey={18} onSelect={this._onSizeSelect.bind(this)}/>
+                <MyInlineMenuItem label={'24pt'} eventKey={24} onSelect={this._onSizeSelect.bind(this)}/>
+                <MyInlineMenuItem label={'36pt'} eventKey={36} onSelect={this._onSizeSelect.bind(this)}/>
+                <MyInlineMenuItem label={'48pt'} eventKey={48} onSelect={this._onSizeSelect.bind(this)}/>
               </DropdownButton>
               <DropdownButton bsSize="small" title={header}>
-                <ParagraphButton><MyBlockMenuItem/></ParagraphButton>
-                <BlockquoteButton><MyBlockMenuItem/></BlockquoteButton>
-                <CodeButton><MyBlockMenuItem/></CodeButton>
-                <H1Button><MyBlockMenuItem/></H1Button>
-                <H2Button><MyBlockMenuItem/></H2Button>
-                <H3Button><MyBlockMenuItem/></H3Button>
-                <H4Button><MyBlockMenuItem/></H4Button>
-                <H5Button><MyBlockMenuItem/></H5Button>
-                <H6Button><MyBlockMenuItem/></H6Button>
+                <ParagraphButton><MyBlockMenuItem eventKey={'PARAGRAPH'}/></ParagraphButton>
+                <BlockquoteButton><MyBlockMenuItem eventKey={'BLOCKQUOTE'}/></BlockquoteButton>
+                <CodeButton><MyBlockMenuItem eventKey={'CODE'}/></CodeButton>
+                <H1Button><MyBlockMenuItem eventKey={'H1'}/></H1Button>
+                <H2Button><MyBlockMenuItem eventKey={'H2'}/></H2Button>
+                <H3Button><MyBlockMenuItem eventKey={'H3'}/></H3Button>
+                <H4Button><MyBlockMenuItem eventKey={'H4'}/></H4Button>
+                <H5Button><MyBlockMenuItem eventKey={'H5'}/></H5Button>
+                <H6Button><MyBlockMenuItem eventKey={'H6'}/></H6Button>
               </DropdownButton>
             </ButtonGroup>
           </ButtonToolbar>
