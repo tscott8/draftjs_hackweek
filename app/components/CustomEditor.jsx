@@ -102,7 +102,11 @@ const styleMap = {
     FONT_SIZE_48: { fontSize: 48 },
     FONT_OPERATOR: { fontFamily: 'Operator' },
     FONT_ARIAL: { fontFamily: 'Arial' },
-    FONT_COMICSANS: { fontFamily: 'Comic Sans MS' }
+    FONT_COMICSANS: { fontFamily: 'Comic Sans MS' },
+    LEFT: { textAlign:'left'},
+    CENTER: { textAlign:'center'},
+    RIGHT: { textAlign:'right'},
+    JUSTIFY: { textAlign:'justify'}
   };
 // function getBlockStyle(block) {
 //   switch (block.getType()) {
@@ -152,10 +156,13 @@ export default class CustomEditor extends Component {
        string
     ));
   }
-  _onAlignmentClick(blockType) {
+  _onAlignmentClick(label) {
     const {editorState} = this.state
-    this.onChange(RichUtils.toggleBlockType(
-    editorState, blockType));
+    const string = 'ALIGN_' + label
+     this.onChange(RichUtils.toggleInlineStyle(
+     editorState,
+      string
+   ));
  }
 
   render() {
@@ -172,10 +179,10 @@ export default class CustomEditor extends Component {
               <BoldButton><MyInlineIconButton glyph="bold"/></BoldButton>
               <ItalicButton><MyInlineIconButton glyph="italic"/></ItalicButton>
               <UnderlineButton><MyInlinePicButton src="underline.png"/></UnderlineButton>
-              <MyBlockIconButton onClick={console.log('LEFT!')} glyph="align-left"/>
-              <MyBlockIconButton onClick={console.log('RIGHT!')} glyph="align-center"/>
-              <MyBlockIconButton onClick={console.log('CENTER!')}glyph="align-right"/>
-              <MyBlockIconButton onClick={console.log('JUSTIFY!')} glyph="align-justify"/>
+              <MyInlineIconButton label={'LEFT'} onClick={this._onAlignmentClick.bind(this)} glyph="align-left"/>
+              <MyInlineIconButton label={'CENTER'} onClick={this._onAlignmentClick.bind(this)} glyph="align-center"/>
+              <MyInlineIconButton label={'RIGHT'} onClick={this._onAlignmentClick.bind(this)}glyph="align-right"/>
+              <MyInlineIconButton label={'JUSTIFY'} onClick={this._onAlignmentClick.bind(this)} glyph="align-justify"/>
               <ULButton><MyBlockIconButton glyph="list"/></ULButton>
               <OLButton><MyBlockPicButton src="ordered-list.png"/></OLButton>
               <DropdownButton bsSize="small" title={font}>
